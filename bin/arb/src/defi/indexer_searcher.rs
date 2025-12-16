@@ -3,6 +3,7 @@ use dex_indexer::{
     DexIndexer,
 };
 use eyre::{bail, ensure, OptionExt, Result};
+use tracing::info;
 use object_pool::ObjectPool;
 use simulator::Simulator;
 use std::sync::Arc;
@@ -103,6 +104,12 @@ impl DexSearcher for IndexerDexSearcher {
         } else {
             self.indexer.get_pools_by_token(token_in_type)
         };
+        info!(
+            token_in_type,
+            ?token_out_type,
+            pools_found = pools.as_ref().map(|p| p.len()).unwrap_or(0),
+            "find_dexes lookup"
+        );
         ensure!(
             pools.is_some(),
             "pools not found, coin_in: {}, coin_out: {:?}",
@@ -119,14 +126,19 @@ impl DexSearcher for IndexerDexSearcher {
         }
 
         let mut res = Vec::new();
+        let mut errors = 0usize;
         while let Some(Ok(result)) = join_set.join_next().await {
             match result {
                 Ok(dexes) => res.extend(dexes),
-                Err(_error) => {
-                    // trace!(?error, "invalid pool");
+                Err(error) => {
+                    errors += 1;
+                    if errors <= 3 {
+                        info!(?error, "new_dexes failed");
+                    }
                 }
             }
         }
+        info!(token_in_type, dexes_created = res.len(), errors, "find_dexes result");
 
         Ok(res)
     }

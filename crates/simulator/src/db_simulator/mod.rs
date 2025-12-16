@@ -38,8 +38,8 @@ use sui_types::{
     storage::{BackingPackageStore, ObjectKey, ObjectStore},
     supported_protocol_versions::{Chain, ProtocolConfig},
     transaction::{
-        CheckedInputObjects, InputObjectKind, InputObjects, ObjectReadResult, ObjectReadResultKind, TransactionData,
-        TransactionDataAPI,
+        CheckedInputObjects, GasData, InputObjectKind, InputObjects, ObjectReadResult, ObjectReadResultKind,
+        TransactionData, TransactionDataAPI, SharedObjectMutability,
     },
     TypeTag,
 };
@@ -94,7 +94,7 @@ impl DBSimulator {
             "/home/ubuntu/sui/db/live/store",
             "/home/ubuntu/sui/fullnode.yaml",
             None,
-            Some("/home/ubuntu/suiflow-relay/pool_related_ids.txt"),
+            Some("/home/ubuntu/suiflow-relay/indexer_ids.txt"),
         )
         .await
     }
@@ -154,7 +154,7 @@ impl DBSimulator {
         protocol_config.object_runtime_max_num_store_entries_system_tx = Some(1000000);
 
         let executor =
-            sui_execution::executor(&protocol_config, true, None).expect("Creating an executor should not fail here");
+            sui_execution::executor(&protocol_config, true).expect("Creating an executor should not fail here");
 
         Self {
             store: writeback_cache,
@@ -190,14 +190,16 @@ impl DBSimulator {
                 InputObjectKind::SharedMoveObject { id, .. } => match self.store.get_object(id) {
                     Some(object) => input_results[i] = Some(ObjectReadResult::new(*kind, object.into())),
                     None => {
-                        if let Some((version, digest)) = self.store.get_last_shared_object_deletion_info(id, epoch_id) {
-                            input_results[i] = Some(ObjectReadResult {
-                                input_object_kind: *kind,
-                                object: ObjectReadResultKind::DeletedSharedObject(version, digest),
-                            });
-                        } else {
+                        // The associated method doesn't currently work on the node and will throw an error
+                        //
+                        // if let Some((version, digest)) = self.store.get_last_shared_object_deletion_info(id, epoch_id) {
+                        //     input_results[i] = Some(ObjectReadResult {
+                        //         input_object_kind: *kind,
+                        //         object: ObjectReadResultKind::DeletedSharedObject(version, digest),
+                        //     });
+                        // } else {
                             return Err(SuiError::from(kind.object_not_found_error()));
-                        }
+                        // }
                     }
                 },
                 InputObjectKind::ImmOrOwnedMoveObject(objref) => {
@@ -238,7 +240,7 @@ impl DBSimulator {
                     Owner::Shared { initial_shared_version } => InputObjectKind::SharedMoveObject {
                         id: obj_ref.0,
                         initial_shared_version,
-                        mutable: true,
+                        mutability: SharedObjectMutability::Mutable,
                     },
                     _ => InputObjectKind::ImmOrOwnedMoveObject(obj_ref),
                 };
@@ -288,7 +290,9 @@ impl Simulator for DBSimulator {
             (original_gas, None)
         };
 
-        let gas_status = match SuiGasStatus::new(tx.gas_budget(), tx.gas_price(), tx.gas_price(), &self.protocol_config)
+        let gas_budget = tx.gas_budget();
+        let gas_price = tx.gas_price();
+        let gas_status = match SuiGasStatus::new(gas_budget, gas_price, gas_price, &self.protocol_config)
             .map_err(|e| eyre::eyre!(e))
         {
             Ok(gas_status) => gas_status,
@@ -296,6 +300,12 @@ impl Simulator for DBSimulator {
                 info!("simulate error: {:?}", e);
                 return Err(e);
             }
+        };
+        let gas_data = GasData {
+            payment: gas_ref,
+            owner: sender,
+            price: gas_price,
+            budget: gas_budget,
         };
 
         // extend override objects with mocked gas and borrowed coin
@@ -343,20 +353,21 @@ impl Simulator for DBSimulator {
         let simulate_start = std::time::Instant::now();
 
         let (inner_temporary_store, effects) = catch_unwind(AssertUnwindSafe(|| {
-            let (inner_temporary_store, _, effects, _) = self.executor.execute_transaction_to_effects(
+            let (inner_temporary_store, _, effects, _, _) = self.executor.execute_transaction_to_effects(
                 &override_cache,
                 &self.protocol_config,
                 self.metrics.clone(),
                 false,
-                &HashSet::new(),
+                Ok(()),
                 &epoch.epoch_id,
                 epoch.epoch_start_timestamp,
                 CheckedInputObjects::new_with_checked_transaction_inputs(input_objects),
-                gas_ref,
+                gas_data,
                 gas_status,
                 kind,
                 sender,
                 digest,
+                &mut None,
             );
             (inner_temporary_store, effects)
         }))

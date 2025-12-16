@@ -4,7 +4,7 @@ use sui_types::{
     base_types::{ObjectID, SequenceNumber},
     dynamic_field::extract_field_from_move_struct,
     object::{Object, Owner},
-    transaction::ObjectArg,
+    transaction::{ObjectArg, SharedObjectMutability},
 };
 
 pub fn extract_struct_from_move_struct(move_struct: &MoveStruct, field_name: &str) -> Result<MoveStruct> {
@@ -136,6 +136,10 @@ pub fn shared_obj_arg(obj: &Object, mutable: bool) -> ObjectArg {
     ObjectArg::SharedObject {
         id: obj.id(),
         initial_shared_version,
-        mutable,
+        mutability: if mutable {
+            SharedObjectMutability::Mutable
+        } else {
+            SharedObjectMutability::Immutable
+        },
     }
 }

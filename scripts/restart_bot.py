@@ -9,7 +9,8 @@ from datetime import datetime
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("bot_restarter.log"), logging.StreamHandler()],
+    handlers=[logging.FileHandler(
+        "bot_restarter.log"), logging.StreamHandler()],
 )
 
 
@@ -22,7 +23,8 @@ def restart_bot():
         logging.info("Killed existing tmux session `mev-arb-bot`")
 
         # Create new session
-        subprocess.run(["tmux", "new-session", "-d", "-s", "mev-arb-bot"], check=True)
+        subprocess.run(["tmux", "new-session", "-d",
+                       "-s", "mev-arb-bot"], check=True)
         logging.info("Created new tmux session `mev-arb-bot`")
 
         # Send the command
@@ -30,7 +32,7 @@ def restart_bot():
             "ENABLE_RECORD_POOL_RELATED_ID=1 cargo run -r --bin arb start-bot "
             "--private-key {} "
             "--use-db-simulator --max-recent-arbs 5 --workers 10 --num-simulators 18 "
-            "--preload-path /home/ubuntu/sui/pool_related_ids.txt "
+            "--preload-path /home/ubuntu/sui/indexer_ids.txt "
         )
 
         subprocess.run(

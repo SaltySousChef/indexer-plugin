@@ -14,7 +14,7 @@ use sui_types::{base_types::SuiAddress, crypto::SuiKeyPair};
 use tracing::{info, warn};
 
 use crate::{
-    collector::{PrivateTxCollector, PublicTxCollector},
+    collector::{GrpcCheckpointCollector, PrivateTxCollector, PublicTxCollector},
     executor::PublicTxExecutor,
     strategy::ArbStrategy,
     types::{Action, Event},
@@ -44,6 +44,15 @@ pub struct Args {
 
 #[derive(Clone, Debug, Parser)]
 struct CollectorConfig {
+    /// gRPC endpoint for checkpoint streaming (e.g., http://localhost:9000)
+    /// Takes priority over other collectors when set
+    #[arg(long, env = "SUI_GRPC_URL")]
+    pub grpc_url: Option<String>,
+
+    /// Max minutes without gRPC connection before exit (systemd will restart)
+    #[arg(long, default_value_t = 5)]
+    pub max_disconnect_mins: u64,
+
     /// relay tx collector (should be mutually exclusive with public tx collector)
     #[arg(long)]
     pub relay_ws_url: Option<String>,
@@ -76,7 +85,7 @@ struct DbSimConfig {
     #[arg(
         long,
         env = "SUI_PRELOAD_PATH",
-        default_value = "/home/ubuntu/suiflow-relay/pool_related_ids.txt"
+        default_value = "/home/ubuntu/suiflow-relay/indexer_ids.txt"
     )]
     pub preload_path: String,
 
@@ -120,7 +129,7 @@ pub async fn run(args: Args) -> Result<()> {
     mev_logger::init_with_whitelisted_modules(
         "mainnet",
         "sui-arb".to_string(),
-        &["arb", "utils", "shio", "cache_metrics=debug"],
+        &["arb", "utils", "shio", "cache_metrics=debug", "dex_indexer"],
     );
 
     let keypair = SuiKeyPair::decode(&args.private_key)?;
@@ -140,7 +149,15 @@ pub async fn run(args: Args) -> Result<()> {
     let preload_path = args.db_sim_config.preload_path;
     let mut engine = Engine::default();
 
-    if let Some(ref ws_url) = args.collector_config.shio_ws_url {
+    // Collector priority: grpc_url > shio_ws_url > tx_socket_path
+    if let Some(ref grpc_url) = args.collector_config.grpc_url {
+        let grpc_collector = GrpcCheckpointCollector::new(
+            grpc_url,
+            args.collector_config.max_disconnect_mins,
+        );
+        engine.add_collector(Box::new(grpc_collector));
+        info!("Using GrpcCheckpointCollector with endpoint: {}", grpc_url);
+    } else if let Some(ref ws_url) = args.collector_config.shio_ws_url {
         let (shio_collector, shio_executor) =
             new_shio_collector_and_executor(keypair, Some(ws_url.clone()), None).await;
         engine.add_collector(map_collector!(shio_collector, Event::Shio));
@@ -151,9 +168,11 @@ pub async fn run(args: Args) -> Result<()> {
         } else {
             engine.add_executor(map_executor!(shio_executor, Action::ShioSubmitBid));
         }
+        info!("Using ShioCollector with endpoint: {}", ws_url);
     } else {
         let public_tx_collector = PublicTxCollector::new(&tx_socket_path);
         engine.add_collector(Box::new(public_tx_collector));
+        info!("Using PublicTxCollector with socket: {}", tx_socket_path);
     }
 
     engine.add_executor(map_executor!(
@@ -246,6 +265,7 @@ pub async fn run(args: Args) -> Result<()> {
 
     heartbeat::start("sui-arb", Duration::from_secs(30));
 
+    info!("DEBUG: All components initialized, starting engine...");
     engine.run_and_join().await.unwrap();
 
     Ok(())

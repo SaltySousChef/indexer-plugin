@@ -111,7 +111,7 @@ macro_rules! get_coin_in_out_v2 {
     }};
 }
 
-// For generating pool_related_ids.txt only, using HttpClient is acceptable.
+// For generating indexer_ids.txt only, using HttpClient is acceptable.
 pub async fn get_children_ids(id: ObjectID) -> Result<Vec<String>> {
     let sui_client = SuiClientBuilder::default().build(SUI_RPC_NODE).await.unwrap();
     let mut next_cursor = None;
@@ -152,7 +152,7 @@ macro_rules! move_struct_layout {
     ($type_:expr, $fields:expr) => {
         MoveStructLayout {
             type_: $type_,
-            fields: Box::new($fields),
+            fields: $fields,
         }
     };
 }

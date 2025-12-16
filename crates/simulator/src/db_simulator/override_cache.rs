@@ -1,26 +1,28 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::sync::{Arc, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
+
+use futures::future::BoxFuture;
 
 use sui_core::authority::authority_per_epoch_store::AuthorityPerEpochStore;
 use sui_core::authority::SuiLockResult;
 use sui_core::execution_cache::{ObjectCacheRead, WritebackCache};
-use sui_types::base_types::{ObjectID, ObjectRef, SequenceNumber, VersionNumber};
+use sui_types::base_types::{ObjectID, FullObjectID, ObjectRef, SequenceNumber, VersionNumber};
 use sui_types::bridge::Bridge;
 use sui_types::clock::Clock;
 use sui_types::committee::EpochId;
 use sui_types::digests::TransactionDigest;
-use sui_types::error::{SuiError, SuiResult, UserInputError};
+use sui_types::error::{SuiErrorKind, SuiResult, UserInputError};
 use sui_types::id::{ID, UID};
 use sui_types::messages_checkpoint::CheckpointSequenceNumber;
 use sui_types::object::{Data, MoveObject, Object, ObjectInner, Owner, OBJECT_START_VERSION};
-use sui_types::storage::{MarkerValue, ObjectKey, ObjectOrTombstone, PackageObject};
+use sui_types::storage::{InputKey, MarkerValue, FullObjectKey, ObjectKey, ObjectOrTombstone, PackageObject};
 use sui_types::sui_system_state::SuiSystemState;
-use sui_types::transaction::ObjectReadResultKind;
+use sui_types::transaction::{ObjectReadResultKind};
 use sui_types::SUI_CLOCK_OBJECT_ID;
 use sui_types::{
     storage::{BackingPackageStore, ChildObjectResolver, ObjectStore, ParentSync},
-    transaction::ObjectReadResult,
+    transaction::{ObjectReadResult, SharedObjectMutability,}
 };
 use tracing::warn;
 
@@ -75,7 +77,7 @@ impl OverrideCache {
                 input_object_kind: sui_types::transaction::InputObjectKind::SharedMoveObject {
                     id: SUI_CLOCK_OBJECT_ID,
                     initial_shared_version: OBJECT_START_VERSION,
-                    mutable: true,
+                    mutability: SharedObjectMutability::Mutable,
                 },
                 object: ObjectReadResultKind::Object(ret_latest_clock_obj!()),
             });
@@ -88,7 +90,7 @@ impl OverrideCache {
         match self.get_override(object_id) {
             Some(r) => match r.object {
                 ObjectReadResultKind::Object(object) => Some(object),
-                ObjectReadResultKind::DeletedSharedObject(_, _) => None,
+                ObjectReadResultKind::ObjectConsensusStreamEnded(_, _) => None,
                 ObjectReadResultKind::CancelledTransactionSharedObject(_) => unreachable!(),
             },
             _ => None,
@@ -123,12 +125,12 @@ impl ChildObjectResolver for OverrideCache {
 
         let parent = *parent;
         if child_object.owner != Owner::ObjectOwner(parent.into()) {
-            let sui_error = SuiError::InvalidChildObjectAccess {
+            let sui_error = SuiErrorKind::InvalidChildObjectAccess {
                 object: *child,
                 given_parent: parent,
                 actual_owner: child_object.owner.clone(),
             };
-            return Err(sui_error);
+            return Err(sui_error.into());
         }
         Ok(Some(child_object))
     }
@@ -151,8 +153,10 @@ impl ChildObjectResolver for OverrideCache {
         // * If we've already received the object at the version -- then treat it as though it doesn't exist.
         // These two cases must remain indisguishable to the caller otherwise we risk forks in
         // transaction replay due to possible reordering of transactions during replay.
+        let full_id = FullObjectID::new(*receiving_object_id, Some(receive_object_at_version));
+        let object_key = FullObjectKey::new(full_id, receive_object_at_version);
         if recv_object.owner != Owner::AddressOwner((*owner).into())
-            || self.have_received_object_at_version(receiving_object_id, receive_object_at_version, epoch_id)
+            || self.have_received_object_at_version(object_key, epoch_id)
         {
             return Ok(None);
         }
@@ -181,7 +185,7 @@ impl ObjectCacheRead for OverrideCache {
         if let Some(override_object) = self.get_override(id) {
             match override_object.object {
                 ObjectReadResultKind::Object(object) => return Ok(Some(PackageObject::new(object))),
-                ObjectReadResultKind::DeletedSharedObject(_, _) => return Ok(None),
+                ObjectReadResultKind::ObjectConsensusStreamEnded(_, _) => return Ok(None),
                 ObjectReadResultKind::CancelledTransactionSharedObject(_) => {
                     unreachable!("override object is in cancelled transaction")
                 }
@@ -207,7 +211,7 @@ impl ObjectCacheRead for OverrideCache {
         if let Some(override_object) = self.get_override(id) {
             match override_object.object {
                 ObjectReadResultKind::Object(object) => return Some(object),
-                ObjectReadResultKind::DeletedSharedObject(_, _) => return None,
+                ObjectReadResultKind::ObjectConsensusStreamEnded(_, _) => return None,
                 ObjectReadResultKind::CancelledTransactionSharedObject(_) => {
                     unreachable!("override object is in cancelled transaction")
                 }
@@ -255,7 +259,7 @@ impl ObjectCacheRead for OverrideCache {
                         ObjectOrTombstone::Object(object),
                     ))
                 }
-                ObjectReadResultKind::DeletedSharedObject(_, _) => {
+                ObjectReadResultKind::ObjectConsensusStreamEnded(_, _) => {
                     let undeleted_object = match self.fallback.as_ref()?.get_object(&object_id) {
                         Some(object) => object,
                         // is it possible?
@@ -287,7 +291,7 @@ impl ObjectCacheRead for OverrideCache {
                         return Some(object);
                     }
                 }
-                ObjectReadResultKind::DeletedSharedObject(_, _) => return None,
+                ObjectReadResultKind::ObjectConsensusStreamEnded(_, _) => return None,
                 ObjectReadResultKind::CancelledTransactionSharedObject(_) => {
                     unreachable!("override object is in cancelled transaction")
                 }
@@ -339,7 +343,7 @@ impl ObjectCacheRead for OverrideCache {
     fn get_lock(&self, obj_ref: ObjectRef, epoch_store: &AuthorityPerEpochStore) -> SuiLockResult {
         self.fallback
             .as_ref()
-            .ok_or_else(|| SuiError::Unknown("No fallback".to_string()))?
+            .ok_or_else(|| SuiErrorKind::Unknown("No fallback".to_string()))?
             .get_lock(obj_ref, epoch_store)
     }
 
@@ -350,13 +354,12 @@ impl ObjectCacheRead for OverrideCache {
                 ObjectReadResultKind::Object(object) => {
                     return Ok(object.compute_object_reference());
                 }
-                ObjectReadResultKind::DeletedSharedObject(_, _) => {
-                    return Err(SuiError::UserInputError {
-                        error: UserInputError::ObjectNotFound {
-                            object_id,
-                            version: None,
-                        },
-                    })
+                ObjectReadResultKind::ObjectConsensusStreamEnded(_, _) => {
+                    return Err(UserInputError::ObjectNotFound {
+                        object_id,
+                        version: None,
+                    }
+                    .into())
                 }
                 ObjectReadResultKind::CancelledTransactionSharedObject(_) => {
                     unreachable!("override object is in cancelled transaction")
@@ -368,7 +371,7 @@ impl ObjectCacheRead for OverrideCache {
         if let Some(ref fallback) = self.fallback {
             fallback._get_live_objref(object_id)
         } else {
-            Err(SuiError::Unknown("No fallback".to_string()))
+            Err(SuiErrorKind::Unknown("No fallback".to_string()).into())
         }
     }
 
@@ -392,37 +395,52 @@ impl ObjectCacheRead for OverrideCache {
     fn get_sui_system_state_object_unsafe(&self) -> SuiResult<SuiSystemState> {
         self.fallback
             .as_ref()
-            .ok_or_else(|| SuiError::Unknown("No fallback".to_string()))?
+            .ok_or_else(|| SuiErrorKind::Unknown("No fallback".to_string()))?
             .get_sui_system_state_object_unsafe()
     }
 
     fn get_bridge_object_unsafe(&self) -> SuiResult<Bridge> {
         self.fallback
             .as_ref()
-            .ok_or_else(|| SuiError::Unknown("No fallback".to_string()))?
+            .ok_or_else(|| SuiErrorKind::Unknown("No fallback".to_string()))?
             .get_bridge_object_unsafe()
     }
 
     fn get_marker_value(
         &self,
-        object_id: &ObjectID,
-        version: SequenceNumber,
+        object_key: FullObjectKey,
         epoch_id: EpochId,
     ) -> Option<MarkerValue> {
         // TODO: implement
-        self.fallback.as_ref()?.get_marker_value(object_id, version, epoch_id)
+        self.fallback.as_ref()?.get_marker_value(object_key, epoch_id)
     }
 
-    fn get_latest_marker(&self, object_id: &ObjectID, epoch_id: EpochId) -> Option<(SequenceNumber, MarkerValue)> {
+    fn get_latest_marker(&self, object_id: FullObjectID, epoch_id: EpochId) -> Option<(SequenceNumber, MarkerValue)> {
         // TODO: implement
         self.fallback.as_ref()?.get_latest_marker(object_id, epoch_id)
     }
 
-    fn get_highest_pruned_checkpoint(&self) -> CheckpointSequenceNumber {
+    fn get_highest_pruned_checkpoint(&self) -> Option<CheckpointSequenceNumber> {
         if let Some(ref fallback) = self.fallback {
             fallback.get_highest_pruned_checkpoint()
         } else {
-            CheckpointSequenceNumber::default()
+            Some(CheckpointSequenceNumber::default())
         }
+    }
+
+    fn multi_input_objects_available_cache_only(&self, keys: &[InputKey]) -> Vec<bool> {
+        // TODO: implement
+        // For simulation purposes, assume all objects are available
+        vec![true; keys.len()]
+    }
+
+    fn notify_read_input_objects<'a>(
+        &'a self,
+        _input_and_receiving_keys: &'a [InputKey],
+        _receiving_keys: &'a HashSet<InputKey>,
+        _epoch: EpochId,
+    ) -> BoxFuture<'a, ()> {
+        // TODO: implement
+        Box::pin(async {})
     }
 }

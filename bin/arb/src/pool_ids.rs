@@ -19,7 +19,7 @@ use sui_sdk::types::{
 use sui_sdk::SuiClientBuilder;
 use sui_types::base_types::{ObjectID, SuiAddress};
 use sui_types::object::{Object, Owner};
-use sui_types::transaction::{InputObjectKind, ObjectReadResult};
+use sui_types::transaction::{InputObjectKind, ObjectReadResult, SharedObjectMutability};
 use tracing::info;
 
 use crate::common::get_latest_epoch;
@@ -28,7 +28,7 @@ use crate::HttpConfig;
 
 #[derive(Clone, Debug, Parser)]
 pub struct Args {
-    #[clap(long, default_value = "./pool_related_ids.txt")]
+    #[clap(long, default_value = "./indexer_ids.txt")]
     pub result_path: String,
 
     #[command(flatten)]
@@ -180,7 +180,7 @@ async fn test_pool_related_objects(args: Args) -> Result<()> {
     let sui = SuiClientBuilder::default().build(&rpc_url).await?;
     let epoch = get_latest_epoch(&sui).await?;
 
-    // Get all pool-related objects;
+    // Get all indexer-related objects;
     let mut override_objects = pool_related_objects(&args.result_path).await?;
     if let Some(delete_objects) = args.delete_objects {
         let delete_objects = delete_objects
@@ -220,7 +220,7 @@ async fn pool_related_objects(file_path: &str) -> Result<Vec<ObjectReadResult>> 
             Owner::Shared { initial_shared_version } => InputObjectKind::SharedMoveObject {
                 id: object_id,
                 initial_shared_version: *initial_shared_version,
-                mutable: true,
+                mutability: SharedObjectMutability::Mutable,
             },
             _ => InputObjectKind::ImmOrOwnedMoveObject(object.compute_object_reference()),
         };

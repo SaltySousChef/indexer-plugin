@@ -23,40 +23,25 @@ utils = { path = "crates/utils" }
 version = { path = "crates/version" }
 primitive-types = "0.13"
 
-fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "69d496c71fb37e3d22fe85e5bbfd4256d61422b9" }
-sui-network = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-sui-types = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-sui-core = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-sui-execution = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-sui-sdk = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-sui-config = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-sui-json-rpc = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-sui-json-rpc-types = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-sui-indexer = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-mysten-network = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-typed-store = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-move-bytecode-utils = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-move-core-types = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-shared-crypto = { git = "https://github.com/suiflow/mevsui", branch = "relay-patch" }
-
-# sui-network = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# sui-types = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# sui-core = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# sui-execution = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# sui-sdk = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# sui-config = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# sui-json-rpc = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# sui-json-rpc-types = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# sui-indexer = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# mysten-network = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# typed-store = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# move-bytecode-utils = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# move-core-types = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
-# shared-crypto = { git = "https://github.com/suiflow/mevsui", branch = "monitor-pool-related-objects" }
+fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "09f86974195ec85d8aae386b1909d341d3ccfe52" }
+sui-network = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+sui-types = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+sui-core = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+sui-execution = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+sui-sdk = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+sui-config = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+sui-json-rpc = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+sui-json-rpc-types = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+sui-indexer = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+mysten-network = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+typed-store = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+move-bytecode-utils = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+move-core-types = { path="CHHANGEME//mist-indexer/external-crates/move/crates/move-core-types" }
+shared-crypto = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
 
 async-trait = "0.1.61"
 async-stream = "0.3"
-tonic = { version = "0.12", features = ["transport"] }
+tonic = { version = "0.12", features = ["transport", "tls", "tls-roots"] }
 tokio = { version = "1.36.0", features = ["rt-multi-thread", "macros"] }
 bcs = "0.1.6"
 prometheus = "0.13.3"
@@ -84,6 +69,15 @@ num_cpus = "1.16"
 bincode = "1.3.3"
 interprocess = { version = "2", features = ["tokio"] }
 rayon = "1.10"
+toml = { version = "0.7.4", features = ["preserve_order"] }
+toml_edit = { version = "0.19.10" }
+notify = "6.1.1"
 
 [profile.release]
 debug = true
+
+[patch."https://github.com/SaltySousChef/sui-indexer"]
+move-core-types = { path = "CHHANGEME//mist-indexer/external-crates/move/crates/move-core-types" }
+
+# [patch."https://github.com/crypto-services/mist-indexer"]
+# move-core-types = { path = "CHHANGEME//MEV/mist-indexer/external-crates/move/crates/move-core-types" }

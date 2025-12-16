@@ -8,7 +8,7 @@ use shio::SHIO_GLOBAL_STATES;
 use sui_sdk::SUI_COIN_TYPE;
 use sui_types::{
     base_types::{ObjectID, SequenceNumber},
-    transaction::{Argument, Command, ObjectArg},
+    transaction::{Argument, Command, ObjectArg, SharedObjectMutability},
     Identifier, TypeTag,
 };
 use tokio::sync::OnceCell;
@@ -33,7 +33,7 @@ impl Shio {
                     .map(|(id, version)| ObjectArg::SharedObject {
                         id: ObjectID::from_str(id).unwrap(),
                         initial_shared_version: SequenceNumber::from_u64(*version),
-                        mutable: true,
+                        mutability: SharedObjectMutability::Mutable,
                     })
                     .collect::<Vec<_>>()
             })

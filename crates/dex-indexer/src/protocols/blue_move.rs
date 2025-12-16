@@ -277,7 +277,7 @@ fn pool_dynamic_child_layout() -> MoveStructLayout {
         )
         .map_err(|e| eyre!(e))
         .unwrap(),
-        fields: Box::new(vec![
+        fields: vec![
             move_field_layout!(
                 "id",
                 move_type_layout_struct!(move_struct_layout!(
@@ -301,7 +301,7 @@ fn pool_dynamic_child_layout() -> MoveStructLayout {
                 ))
             ),
             move_field_layout!("value", MoveTypeLayout::Address),
-        ]),
+        ],
     }
 }
 

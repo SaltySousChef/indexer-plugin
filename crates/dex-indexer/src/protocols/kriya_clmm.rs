@@ -323,7 +323,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_swap_event_http() {
-        let provider = HttpSimulator::new(SUI_RPC_NODE, &None).await;
+        let provider = HttpSimulator::new("https://fullnode.mainnet.sui.io:443", &None).await;
 
         let swap_event = KriyaClmmSwapEvent {
             pool: ObjectID::from_str("0x4ab1017f5a10d122fdfc6656f6c2f7cc641edc1e2d12680cd9d98cf59d4e7e7b").unwrap(),

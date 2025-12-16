@@ -10,7 +10,7 @@ use sui_types::{
     messages_grpc::{
         HandleCertificateRequestV3, HandleCertificateResponseV2, HandleCertificateResponseV3,
         HandleSoftBundleCertificatesRequestV3, HandleSoftBundleCertificatesResponseV3, HandleTransactionRequestV2,
-        HandleTransactionResponse, HandleTransactionResponseV2, ObjectInfoRequest, ObjectInfoResponse,
+        HandleTransactionResponse, ObjectInfoRequest, ObjectInfoResponse,
         SubmitCertificateResponse, SystemStateRequest, TransactionInfoRequest, TransactionInfoResponse,
     },
     sui_system_state::SuiSystemState,
@@ -84,12 +84,12 @@ impl Validator for Relay {
         Err(tonic::Status::internal("Not implemented"))
     }
 
-    async fn transaction_v2(
-        &self,
-        _request: tonic::Request<HandleTransactionRequestV2>,
-    ) -> Result<tonic::Response<HandleTransactionResponseV2>, tonic::Status> {
-        Err(tonic::Status::internal("Not implemented"))
-    }
+    // async fn transaction_v2(
+    //     &self,
+    //     _request: tonic::Request<HandleTransactionRequestV2>,
+    // ) -> Result<tonic::Response<HandleTransactionResponseV2>, tonic::Status> {
+    //     Err(tonic::Status::internal("Not implemented"))
+    // }
 
     async fn submit_certificate(
         &self,

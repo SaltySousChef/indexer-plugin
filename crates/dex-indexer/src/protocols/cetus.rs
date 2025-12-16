@@ -11,6 +11,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use shio::ShioEvent;
 use simulator::{SimulateCtx, Simulator};
+use sui_json_rpc_types::BcsEvent;
 use sui_sdk::{
     rpc_types::{EventFilter, SuiData, SuiEvent, SuiObjectDataOptions},
     types::{base_types::ObjectID, TypeTag},
@@ -119,13 +120,47 @@ pub struct CetusSwapEvent {
     pub a2b: bool,
 }
 
+/// BCS layout matching Move struct field order
+#[allow(dead_code)]
+#[derive(Deserialize)]
+struct CetusSwapEventBcs {
+    atob: bool,
+    pool: ObjectID,
+    partner: ObjectID,
+    amount_in: u64,
+    amount_out: u64,
+    ref_amount: u64,
+    fee_amount: u64,
+    vault_a_amount: u64,
+    vault_b_amount: u64,
+    before_sqrt_price: u128,
+    after_sqrt_price: u128,
+    steps: u64,
+}
+
 impl TryFrom<&SuiEvent> for CetusSwapEvent {
     type Error = eyre::Error;
 
     fn try_from(event: &SuiEvent) -> Result<Self> {
         ensure!(event.type_.to_string() == CETUS_SWAP_EVENT, "Not a CetusSwapEvent");
 
-        (&event.parsed_json).try_into()
+        // Try JSON first (existing path)
+        if !event.parsed_json.is_null() {
+            return (&event.parsed_json).try_into();
+        }
+
+        // Fall back to BCS decoding
+        let bytes = match &event.bcs {
+            BcsEvent::Base64 { bcs } => bcs,
+            BcsEvent::Base58 { bcs } => bcs,
+        };
+        let bcs_event: CetusSwapEventBcs = bcs::from_bytes(bytes)?;
+        Ok(Self {
+            pool: bcs_event.pool,
+            amount_in: bcs_event.amount_in,
+            amount_out: bcs_event.amount_out,
+            a2b: bcs_event.atob,
+        })
     }
 }
 
@@ -402,7 +437,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_swap_event_http() {
-        let provider = HttpSimulator::new("", &None).await;
+        let provider = HttpSimulator::new("https://fullnode.mainnet.sui.io:443", &None).await;
 
         let swap_event = CetusSwapEvent {
             pool: ObjectID::from_str("0xdb36a73be4abfad79dc57e986f59294cd33f3c43bdf7cf265376f624be60cb18").unwrap(),

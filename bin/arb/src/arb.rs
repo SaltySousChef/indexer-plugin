@@ -154,7 +154,7 @@ impl Arb {
 
             let mut max_trial_res = TrialResult::default();
             while let Some(Ok(trial_res)) = joinset.join_next().await {
-                // debug!(?trial_res, "Grid searching");
+                debug!(?trial_res, "Grid searching");
                 if let Ok(trial_res) = trial_res {
                     if trial_res.cache_misses > cache_misses {
                         cache_misses = trial_res.cache_misses;
@@ -166,6 +166,13 @@ impl Arb {
             }
             (max_trial_res, timer.elapsed())
         };
+
+        info!(
+            profit = max_trial_res.profit,
+            amount_in = max_trial_res.amount_in,
+            path = ?max_trial_res.trade_path,
+            "Best grid search result"
+        );
 
         ensure!(
             max_trial_res.profit > 0,
@@ -251,6 +258,7 @@ impl TrialCtx {
         sim_ctx: SimulateCtx,
     ) -> Result<Self> {
         let buy_paths = defi.find_buy_paths(coin_type).await?;
+        info!(coin_type, buy_paths = buy_paths.len(), "find_buy_paths result");
         ensure!(!buy_paths.is_empty(), "no buy paths found for {}", coin_type);
 
         let sell_paths = defi.find_sell_paths(coin_type).await?;

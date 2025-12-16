@@ -31,7 +31,7 @@ use sui_types::{
     transaction::{Argument, TransactionData},
 };
 use tokio::task::JoinSet;
-use tracing::Instrument;
+use tracing::{info, Instrument};
 use trade::{FlashResult, TradeResult};
 pub use trade::{Path, TradeCtx, TradeType, Trader};
 
@@ -162,6 +162,7 @@ impl Defi {
     }
 
     pub async fn find_sell_paths(&self, coin_in_type: &str) -> Result<Vec<Path>> {
+        info!(coin_in_type, "find_sell_paths called");
         if coin::is_native_coin(coin_in_type) {
             return Ok(vec![Path::default()]);
         }

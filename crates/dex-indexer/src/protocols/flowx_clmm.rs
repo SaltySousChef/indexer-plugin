@@ -350,7 +350,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_swap_event_http() {
-        let provider = HttpSimulator::new("", &None).await;
+        let provider = HttpSimulator::new("https://fullnode.mainnet.sui.io:443", &None).await;
 
         let swap_event = FlowxClmmSwapEvent {
             pool: ObjectID::from_str("0x2e88a6a61327ba517dcf1c57346ed1fdd25d98e78007e389f208658224baa72f").unwrap(),

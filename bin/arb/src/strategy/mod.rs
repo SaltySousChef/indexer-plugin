@@ -26,7 +26,7 @@ use sui_types::{
     digests::TransactionDigest,
     object::{MoveObject, Object, Owner, OBJECT_START_VERSION},
     supported_protocol_versions::{Chain, ProtocolConfig},
-    transaction::{InputObjectKind, ObjectReadResult, TransactionData},
+    transaction::{InputObjectKind, ObjectReadResult, TransactionData, SharedObjectMutability},
 };
 use tokio::{
     runtime::{Builder, Handle, RuntimeFlavor},
@@ -97,14 +97,22 @@ impl ArbStrategy {
 
     #[instrument(name = "on-new-tx-effects", skip_all, fields(tx = %tx_effects.transaction_digest()))]
     async fn on_new_tx_effects(&mut self, tx_effects: SuiTransactionBlockEffects, events: Vec<SuiEvent>) -> Result<()> {
+        // debug!(tx = %tx_effects.transaction_digest(), events_count = events.len(), "Processing tx effects");
+
         let coin_pools = self.parse_involved_coin_pools(events).await;
         if coin_pools.is_empty() {
+            // debug!("No relevant coin pools found, skipping");
             return Ok(());
         }
 
         let tx_digest = tx_effects.transaction_digest();
         let epoch = self.get_latest_epoch().await?;
         let sim_ctx = SimulateCtx::new(epoch, vec![]);
+
+        debug!(coin_pools_count = coin_pools.len(), "Found coin pools, adding to arb cache");
+        for (coin, pool_id) in &coin_pools {
+            debug!(coin = %coin, pool_id = ?pool_id, "Adding to arb cache");
+        }
 
         for (coin, pool_id) in coin_pools {
             self.arb_cache
@@ -150,8 +158,14 @@ impl ArbStrategy {
             let own_simulator = self.own_simulator.clone();
             join_set.spawn(async move {
                 if let Ok(protocol) = Protocol::try_from(&event) {
-                    if let Ok(swap_event) = protocol.sui_event_to_swap_event(&event, own_simulator).await {
-                        return Some((swap_event.involved_coin_one_side(), swap_event.pool_id()));
+                    match protocol.sui_event_to_swap_event(&event, own_simulator).await {
+                        Ok(swap_event) => {
+                            debug!(?protocol, "Successfully parsed swap event");
+                            return Some((swap_event.involved_coin_one_side(), swap_event.pool_id()));
+                        }
+                        Err(e) => {
+                            // debug!(?protocol, error = %e, "Failed to parse swap event");
+                        }
                     }
                 }
                 None
@@ -244,7 +258,7 @@ fn new_object_read_result(tx_digest: TransactionDigest, shio_obj: &ShioObject) -
         let version = OBJECT_START_VERSION;
         let contents = Base64::decode(&shio_obj.object_bcs)?;
         let protocol_config = ProtocolConfig::get_for_version(ProtocolVersion::MAX, Chain::Mainnet);
-        unsafe { MoveObject::new_from_execution(type_, has_public_transfer, version, contents, &protocol_config)? }
+        unsafe { MoveObject::new_from_execution(type_, has_public_transfer, version, contents, &protocol_config, false)? }
     };
 
     let owner = serde_json::from_value::<Owner>(shio_obj.owner.clone())?;
@@ -255,7 +269,7 @@ fn new_object_read_result(tx_digest: TransactionDigest, shio_obj: &ShioObject) -
         Owner::Shared { initial_shared_version } => InputObjectKind::SharedMoveObject {
             id,
             initial_shared_version,
-            mutable: true,
+            mutability: SharedObjectMutability::Mutable,
         },
         _ => InputObjectKind::ImmOrOwnedMoveObject(object.compute_object_reference()),
     };

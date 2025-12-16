@@ -41,3 +41,9 @@ shared-crypto.workspace = true
 interprocess.workspace = true
 bincode.workspace = true
 rayon.workspace = true
+tonic.workspace = true
+prost = "0.13"
+prost-types = "0.13"
+
+[build-dependencies]
+tonic-build = "0.12"

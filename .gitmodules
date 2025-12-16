@@ -1,0 +1,3 @@
+[submodule "bin/arb/sui-apis"]
+	path = bin/arb/sui-apis
+	url = https://github.com/MystenLabs/sui-apis.git

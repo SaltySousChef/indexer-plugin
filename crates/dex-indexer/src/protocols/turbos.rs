@@ -255,7 +255,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_swap_event_http() {
-        let provider = HttpSimulator::new("", &None).await;
+        let provider = HttpSimulator::new("https://fullnode.mainnet.sui.io:443", &None).await;
 
         let swap_event = TurbosSwapEvent {
             pool: ObjectID::from_str("0x77f786e7bbd5f93f7dc09edbcffd9ea073945564767b65cf605f388328449d50").unwrap(),

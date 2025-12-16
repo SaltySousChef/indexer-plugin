@@ -207,7 +207,7 @@ mod tests {
         use super::*;
         use simulator::HttpSimulator;
 
-        let provider = HttpSimulator::new("", &None).await;
+        let provider = HttpSimulator::new("https://fullnode.mainnet.sui.io:443", &None).await;
 
         let swap_event = KriyaAmmSwapEvent {
             pool: ObjectID::from_str("0x367e02acb99632e18db69c3e93d89d21eb721e1d1fcebc0f6853667337450acc").unwrap(),
