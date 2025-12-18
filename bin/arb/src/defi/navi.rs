@@ -12,7 +12,6 @@ use utils::object::shared_obj_arg;
 
 use super::{trade::FlashResult, TradeCtx};
 
-// Was 0x834a86970ae93a73faf4fff16ae40bdb72b91c47be585fff19a2af60a19ddca3
 const NAVI_PROTOCOL: &str = "0xee0041239b89564ce870a7dec5ddc5d114367ab94a1137e90aa0633cb76518e0";
 const NAVI_POOL: &str = "0x96df0fce3c471489f4debaaa762cf960b3d97820bd1f3f025ff8190730e958c5";
 const NAVI_CONFIG: &str = "0x3672b2bf471a60c30a03325f104f92fb195c9d337ba58072dce764fe2aa5e2dc";

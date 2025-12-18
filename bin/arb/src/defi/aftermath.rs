@@ -324,6 +324,12 @@ impl Dex for Aftermath {
 
     fn flip(&mut self) {
         std::mem::swap(&mut self.coin_in_type, &mut self.coin_out_type);
+        std::mem::swap(&mut self.index_in, &mut self.index_out);
+        std::mem::swap(&mut self.swap_fee_in, &mut self.swap_fee_out);
+        // Swap CoinIn and CoinOut type params (indices 1 and 2)
+        if self.type_params.len() >= 3 {
+            self.type_params.swap(1, 2);
+        }
     }
 
     fn is_a2b(&self) -> bool {

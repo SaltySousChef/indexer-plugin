@@ -90,18 +90,20 @@ impl DBSimulator {
     }
 
     pub async fn new_default_slow() -> Self {
-        Self::new_slow(
-            "/home/ubuntu/sui/db/live/store",
-            "/home/ubuntu/sui/fullnode.yaml",
-            None,
-            Some("/home/ubuntu/suiflow-relay/indexer_ids.txt"),
-        )
-        .await
+        let db_path = std::env::var("SUI_DB_PATH").unwrap_or_else(|_| "/home/ubuntu/sui/db/live/store".to_string());
+        let config_path =
+            std::env::var("SUI_CONFIG_PATH").unwrap_or_else(|_| "/home/ubuntu/sui/fullnode.yaml".to_string());
+        let preload_path = std::env::var("SUI_PRELOAD_PATH").ok();
+
+        Self::new_slow(&db_path, &config_path, None, preload_path.as_deref()).await
     }
 
     pub async fn new_test(fallback: bool) -> Self {
-        let authority_store =
-            Self::new_authority_store("/home/ubuntu/sui/db/live/store", "/home/ubuntu/sui/fullnode.yaml").await;
+        let db_path = std::env::var("SUI_DB_PATH").unwrap_or_else(|_| "/home/ubuntu/sui/db/live/store".to_string());
+        let config_path =
+            std::env::var("SUI_CONFIG_PATH").unwrap_or_else(|_| "/home/ubuntu/sui/fullnode.yaml".to_string());
+
+        let authority_store = Self::new_authority_store(&db_path, &config_path).await;
 
         Self::new(authority_store, None, None, fallback).await
     }
