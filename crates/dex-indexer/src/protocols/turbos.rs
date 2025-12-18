@@ -17,7 +17,7 @@ use utils::object::{
     extract_object_id_from_move_struct, extract_struct_from_move_struct,
 };
 
-use super::{get_coin_decimals, get_pool_coins_type, SUI_RPC_NODE};
+use super::{get_coin_decimals, get_pool_coins_type, sui_rpc_node};
 use crate::{
     get_coin_in_out_v2,
     types::{Pool, PoolExtra, Protocol, SwapEvent, Token},
@@ -207,7 +207,7 @@ pub async fn turbos_pool_children_ids(pool: &Pool, simulator: Arc<dyn Simulator>
     };
 
     let sui_client = SuiClientBuilder::default()
-    .build(SUI_RPC_NODE)
+    .build(&sui_rpc_node())
     .await
     .unwrap();
 

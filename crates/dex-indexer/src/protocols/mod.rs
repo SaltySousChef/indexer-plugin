@@ -26,7 +26,9 @@ use sui_sdk::{
 
 use crate::{blockberry, normalize_coin_type};
 
-pub const SUI_RPC_NODE: &str = "";
+pub fn sui_rpc_node() -> String {
+    std::env::var("SUI_RPC_URL").unwrap_or_else(|_| "http://localhost:9000".to_string())
+}
 
 #[cached(key = "String", convert = r##"{ coin_type.to_string() }"##, result = true)]
 pub async fn get_coin_decimals(sui: &SuiClient, coin_type: &str) -> Result<u8> {
@@ -113,7 +115,7 @@ macro_rules! get_coin_in_out_v2 {
 
 // For generating indexer_ids.txt only, using HttpClient is acceptable.
 pub async fn get_children_ids(id: ObjectID) -> Result<Vec<String>> {
-    let sui_client = SuiClientBuilder::default().build(SUI_RPC_NODE).await.unwrap();
+    let sui_client = SuiClientBuilder::default().build(&sui_rpc_node()).await.unwrap();
     let mut next_cursor = None;
     let mut children = vec![];
 
