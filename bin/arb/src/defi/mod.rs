@@ -41,7 +41,8 @@ const MAX_HOP_COUNT: usize = 2;
 const MAX_POOL_COUNT: usize = 10;
 const MIN_LIQUIDITY: u128 = 1000;
 
-pub const CETUS_AGGREGATOR: &str = "0x11451575c775a3e633437b827ecbc1eb51a5964b0302210b28f5b89880be21a2";
+
+pub const CETUS_AGGREGATOR: &str = "0x40e457bc65a398d2db7026881358fcb7cfa2f1bb052bca41f46c55a1103f2d6f";
 
 #[async_trait::async_trait]
 pub trait DexSearcher: Send + Sync {
@@ -282,9 +283,8 @@ impl Defi {
                         best_trade_res = trade_res;
                     }
                 }
-                Err(_error) => {
-                    // tracing::error!(path = ?paths[idx], ?error, "trade
-                    // error");
+                Err(error) => {
+                    // tracing::error!(path = ?paths[idx], ?error, "trade error");
                 }
             }
         }
