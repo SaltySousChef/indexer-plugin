@@ -89,14 +89,14 @@ macro_rules! get_coin_in_out_v2 {
             .ok_or_else(|| eyre!("object is not a move object"))?;
 
         let type_params = obj.type_().type_params();
-        let coin_a = match type_params.first() {
+        let coin_a = match type_params.first().map(|c| c.as_ref()) {
             Some(sui_sdk::types::TypeTag::Struct(t)) => {
                 $crate::normalize_coin_type(&format!("0x{}::{}::{}", t.address, t.module, t.name))
             }
             _ => return Err(eyre!("missing type param")),
         };
 
-        let coin_b = match type_params.get(1) {
+        let coin_b = match type_params.get(1).map(|c| c.as_ref()) {
             Some(sui_sdk::types::TypeTag::Struct(t)) => {
                 $crate::normalize_coin_type(&format!("0x{}::{}::{}", t.address, t.module, t.name))
             }
