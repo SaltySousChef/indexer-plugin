@@ -15,7 +15,6 @@ use utils::{coin, new_test_sui_client, object::*};
 use super::{trade::FlashResult, TradeCtx};
 use crate::{config::*, defi::Dex};
 
-// Old address: 0xeffc8ae61f439bb34c9b905ff8f29ec56873dcedf81c7123ff2f1f67c45ec302 
 const CETUS_DEX: &str = "0x40e457bc65a398d2db7026881358fcb7cfa2f1bb052bca41f46c55a1103f2d6f";
 const CONFIG: &str = "0xdaa46292632c3c4d8f31f23ea0f9b36a28ff3677e9684980e4438403a67a3d8f";
 const PARTNER: &str = "0x639b5e433da31739e800cd085f356e64cae222966d0f1b11bd9dc76b322ff58b";

@@ -18,7 +18,7 @@ use utils::{
 use super::{trade::FlashResult, TradeCtx};
 use crate::{config::*, defi::Dex};
 
-const FLOWX_CLMM: &str = "0x25929e7f29e0a30eb4e692952ba1b5b65a3a4d65ab5f2a32e1ba3edcb587f26d";
+const FLOWX_CLMM: &str = "0xde2c47eb0da8c74e4d0f6a220c41619681221b9c2590518095f0f0c2d3f3c772";
 const VERSIONED: &str = "0x67624a1533b5aff5d0dfcf5e598684350efd38134d2d245f475524c03a64e656";
 const POOL_REGISTRY: &str = "0x27565d24a4cd51127ac90e4074a841bbe356cca7bf5759ddc14a975be1632abc";
 
