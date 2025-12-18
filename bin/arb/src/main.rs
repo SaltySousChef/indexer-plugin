@@ -40,6 +40,11 @@ pub enum Command {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Install ring as the default crypto provider for rustls (aws-lc-rs may fail on some systems)
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("Failed to install rustls crypto provider");
+
     let args = Args::parse();
 
     match args.command {
