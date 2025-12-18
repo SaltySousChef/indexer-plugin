@@ -33,7 +33,7 @@ pub fn supported_protocols() -> Vec<Protocol> {
     vec![
         Protocol::Cetus,
         Protocol::Turbos,
-        // Protocol::Aftermath,
+        Protocol::Aftermath,
         Protocol::KriyaAmm,
         Protocol::KriyaClmm,
         Protocol::FlowxClmm,

@@ -324,12 +324,13 @@ impl Dex for Aftermath {
 
     fn flip(&mut self) {
         std::mem::swap(&mut self.coin_in_type, &mut self.coin_out_type);
-        // std::mem::swap(&mut self.index_in, &mut self.index_out);
-        // std::mem::swap(&mut self.swap_fee_in, &mut self.swap_fee_out);
-        // // Swap CoinIn and CoinOut type params (indices 1 and 2)
-        // if self.type_params.len() >= 3 {
-        //     self.type_params.swap(1, 2);
-        // }
+        // Swap the CoinIn and CoinOut type params (indices 1 and 2), keeping LP at index 0
+        if self.type_params.len() >= 3 {
+            self.type_params.swap(1, 2);
+        }
+        // Swap the indices and fees for correct amount calculation
+        std::mem::swap(&mut self.index_in, &mut self.index_out);
+        std::mem::swap(&mut self.swap_fee_in, &mut self.swap_fee_out);
     }
 
     fn is_a2b(&self) -> bool {
@@ -432,6 +433,7 @@ mod tests {
         defi::{indexer_searcher::IndexerDexSearcher, DexSearcher},
     };
 
+    // Tests SUI -> USDC swap (original direction)
     #[tokio::test]
     async fn test_aftermath_swap_tx() {
         mev_logger::init_console_logger_with_directives(None, &["arb=debug"]);
@@ -463,6 +465,53 @@ mod tests {
             .filter(|dex| dex.protocol() == Protocol::Aftermath)
             .max_by_key(|dex| dex.liquidity())
             .unwrap();
+        let tx_data = dex.swap_tx(owner, recipient, amount_in).await.unwrap();
+        info!("🧀 tx_data: {:?}", tx_data);
+
+        let simulator = simulator_pool.get();
+        let response = simulator.simulate(tx_data, Default::default()).await.unwrap();
+        info!("🧀 {:?}", response);
+    }
+
+    // Tests USDC -> SUI swap (flipped direction) - this exercises the flip() method
+    // which must correctly swap type_params, indices, and fees
+    #[tokio::test]
+    async fn test_aftermath_swap_tx_flipped() {
+        mev_logger::init_console_logger_with_directives(None, &["arb=debug"]);
+
+        let simulator_pool = Arc::new(ObjectPool::new(1, move || {
+            tokio::runtime::Runtime::new()
+                .unwrap()
+                .block_on(async { Box::new(DBSimulator::new_test(true).await) as Box<dyn Simulator> })
+        }));
+
+        let owner = SuiAddress::from_str("suiprivkey1qpz727z3p2uf4nv86yme9xls96nkcl0yr7a939zpp66h9uj406hq6myd3l7").unwrap();
+        let recipient =
+            SuiAddress::from_str("0x0cbe287984143ef232336bb39397bd10607fa274707e8d0f91016dceb31bb829").unwrap();
+        // Swapping in the opposite direction: USDC -> SUI
+        let token_in_type = "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN";
+        let token_out_type = "0x2::sui::SUI";
+        let amount_in = 1000000; // 1 USDC (6 decimals)
+
+        // find dexes and swap
+        let searcher = IndexerDexSearcher::new(TEST_HTTP_URL, simulator_pool.clone())
+            .await
+            .unwrap();
+        let dexes = searcher
+            .find_dexes(token_in_type, Some(token_out_type.into()))
+            .await
+            .unwrap();
+        info!("🧀 dexes_len: {}", dexes.len());
+        let dex = dexes
+            .into_iter()
+            .filter(|dex| dex.protocol() == Protocol::Aftermath)
+            .max_by_key(|dex| dex.liquidity())
+            .unwrap();
+
+        // Verify the dex has the correct types after potential flip
+        assert_eq!(dex.coin_in_type(), token_in_type);
+        assert_eq!(dex.coin_out_type(), token_out_type);
+
         let tx_data = dex.swap_tx(owner, recipient, amount_in).await.unwrap();
         info!("🧀 tx_data: {:?}", tx_data);
 
