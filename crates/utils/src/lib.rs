@@ -100,8 +100,9 @@ pub fn current_time_ms() -> u64 {
 }
 
 pub async fn new_test_sui_client() -> SuiClient {
+    let rpc_url = std::env::var("SUI_RPC_URL").unwrap_or_else(|_| "http://localhost:9000".to_string());
     SuiClientBuilder::default()
-        .build("")
+        .build(&rpc_url)
         .await
         .unwrap()
 }
