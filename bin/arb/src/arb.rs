@@ -139,15 +139,18 @@ impl Arb {
             (ctx, timer.elapsed())
         };
 
-        // Grid search
-        let starting_grid = 1_000_000u64; // 0.001 SUI
+        // Grid search: 10 steps from 0.01 SUI to 1000 SUI (logarithmic scale)
+        let min_amount = 10_000_000u64; // 0.01 SUI
+        let max_amount = 1_000_000_000_000u64; // 1000 SUI
+        let steps = 10u32;
         let mut cache_misses = 0;
         let (mut max_trial_res, grid_search_duration) = {
             let timer = Instant::now();
             let mut joinset = JoinSet::new();
-            for inc in 1..11 {
+            for i in 0..steps {
                 let ctx = ctx.clone();
-                let grid = starting_grid.checked_mul(10u64.pow(inc)).context("Grid overflow")?;
+                let ratio = (max_amount as f64 / min_amount as f64).powf(i as f64 / (steps - 1) as f64);
+                let grid = (min_amount as f64 * ratio) as u64;
 
                 joinset.spawn(async move { ctx.trial(grid).await }.in_current_span());
             }
