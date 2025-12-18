@@ -251,7 +251,7 @@ impl SwapEvent {
 pub enum Protocol {
     Cetus,
     Turbos,
-    // Aftermath,
+    Aftermath,
     KriyaAmm,
     KriyaClmm,
     FlowxAmm,

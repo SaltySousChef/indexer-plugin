@@ -62,7 +62,7 @@ fn supported_protocols() -> Vec<Protocol> {
         Protocol::KriyaClmm,
         Protocol::FlowxClmm,
         Protocol::Navi,
-        Protocol::Aftermath,
+        // Protocol::Aftermath,
     ]
 }
 
