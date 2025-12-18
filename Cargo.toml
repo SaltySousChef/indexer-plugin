@@ -23,21 +23,21 @@ utils = { path = "crates/utils" }
 version = { path = "crates/version" }
 primitive-types = "0.13"
 
-fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "09f86974195ec85d8aae386b1909d341d3ccfe52" }
-sui-network = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
-sui-types = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
-sui-core = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
-sui-execution = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
-sui-sdk = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
-sui-config = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
-sui-json-rpc = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
-sui-json-rpc-types = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
-sui-indexer = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
-mysten-network = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
-typed-store = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
-move-bytecode-utils = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
-move-core-types = { path="CHHANGEME//mist-indexer/external-crates/move/crates/move-core-types" }
-shared-crypto = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.61.2-patched" }
+fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "4db0e90c732bbf7420ca20de808b698883148d9c" }
+sui-network = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
+sui-types = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
+sui-core = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
+sui-execution = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
+sui-sdk = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
+sui-config = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
+sui-json-rpc = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
+sui-json-rpc-types = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
+sui-indexer = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
+mysten-network = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
+typed-store = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
+move-bytecode-utils = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
+move-core-types = { path="../mist-indexer/external-crates/move/crates/move-core-types" }
+shared-crypto = { git = "https://github.com/SaltySousChef/sui-indexer", tag = "mainnet-v1.62.1-patched" }
 
 async-trait = "0.1.61"
 async-stream = "0.3"
@@ -77,7 +77,7 @@ notify = "6.1.1"
 debug = true
 
 [patch."https://github.com/SaltySousChef/sui-indexer"]
-move-core-types = { path = "CHHANGEME//mist-indexer/external-crates/move/crates/move-core-types" }
+move-core-types = { path = "../mist-indexer/external-crates/move/crates/move-core-types" }
 
 # [patch."https://github.com/crypto-services/mist-indexer"]
 # move-core-types = { path = "CHHANGEME//MEV/mist-indexer/external-crates/move/crates/move-core-types" }
