@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use sui_sdk::SUI_COIN_TYPE;
 
-pub const GAS_BUDGET: u64 = 10_000_000_000;
+pub const GAS_BUDGET: u64 = 1_000_000_000;
 pub const MAX_SQRT_PRICE_X64: u128 = 79226673515401279992447579055;
 pub const MIN_SQRT_PRICE_X64: u128 = 4295048016;
 
