@@ -129,7 +129,7 @@ pub async fn run(args: Args) -> Result<()> {
     mev_logger::init_with_whitelisted_modules(
         "mainnet",
         "sui-arb".to_string(),
-        &["arb", "utils", "shio", "cache_metrics=debug", "dex_indexer"],
+        &["arb", "utils", "shio", "cache_metrics=info", "dex_indexer"],
     );
 
     let keypair = SuiKeyPair::decode(&args.private_key)?;
