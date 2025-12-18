@@ -6,13 +6,14 @@ use sui_sdk::SUI_COIN_TYPE;
 use sui_types::{
     base_types::ObjectID,
     transaction::{Argument, Command, ObjectArg},
-    Identifier, TypeTag, SUI_CLOCK_OBJECT_ID,
+    Identifier, TypeTag, SUI_CLOCK_OBJECT_ID, SUI_SYSTEM_STATE_OBJECT_ID,
 };
 use utils::object::shared_obj_arg;
 
 use super::{trade::FlashResult, TradeCtx};
 
-const NAVI_PROTOCOL: &str = "0x834a86970ae93a73faf4fff16ae40bdb72b91c47be585fff19a2af60a19ddca3";
+// Was 0x834a86970ae93a73faf4fff16ae40bdb72b91c47be585fff19a2af60a19ddca3
+const NAVI_PROTOCOL: &str = "0xee0041239b89564ce870a7dec5ddc5d114367ab94a1137e90aa0633cb76518e0";
 const NAVI_POOL: &str = "0x96df0fce3c471489f4debaaa762cf960b3d97820bd1f3f025ff8190730e958c5";
 const NAVI_CONFIG: &str = "0x3672b2bf471a60c30a03325f104f92fb195c9d337ba58072dce764fe2aa5e2dc";
 const NAVI_STORAGE: &str = "0xbb4e2f4b6205c2e2a2db47aeb4f830796ec7c005f88537ee775986639bc442fe";
@@ -24,6 +25,7 @@ pub struct Navi {
     config: ObjectArg,
     storage: ObjectArg,
     clock: ObjectArg,
+    sui_system_state: ObjectArg,
 }
 
 impl Navi {
@@ -45,6 +47,10 @@ impl Navi {
             .get_object(&SUI_CLOCK_OBJECT_ID)
             .await
             .ok_or_eyre("sui clock not found")?;
+        let sui_system_state = simulator
+            .get_object(&SUI_SYSTEM_STATE_OBJECT_ID)
+            .await
+            .ok_or_eyre("sui system state not found")?;
 
         Ok(Self {
             sui_coin_type: TypeTag::from_str(SUI_COIN_TYPE).unwrap(),
@@ -52,27 +58,30 @@ impl Navi {
             config: shared_obj_arg(&config, false),
             storage: shared_obj_arg(&storage, true),
             clock: shared_obj_arg(&clock, false),
+            sui_system_state: shared_obj_arg(&sui_system_state, true),
         })
     }
 
     /*
-    public fun flash_loan_with_ctx<CoinType>(
+    public fun flash_loan_with_ctx_v2<CoinType>(
         config: &FlashLoanConfig,
         pool: &mut Pool<CoinType>,
         amount: u64,
+        sui_system_state: &mut SuiSystemState,
         ctx: &mut TxContext
     ): (Balance<CoinType>, FlashLoanReceipt<CoinType>)
     */
     pub fn extend_flashloan_tx(&self, ctx: &mut TradeCtx, amount_in: u64) -> Result<FlashResult> {
         let package = ObjectID::from_hex_literal(NAVI_PROTOCOL)?;
         let module = Identifier::new("lending").map_err(|e| eyre!(e))?;
-        let function = Identifier::new("flash_loan_with_ctx").map_err(|e| eyre!(e))?;
+        let function = Identifier::new("flash_loan_with_ctx_v2").map_err(|e| eyre!(e))?;
         let type_arguments = vec![self.sui_coin_type.clone()];
 
         let arguments = vec![
             ctx.obj(self.config).map_err(|e| eyre!(e))?,
             ctx.obj(self.pool).map_err(|e| eyre!(e))?,
             ctx.pure(amount_in).map_err(|e| eyre!(e))?,
+            ctx.obj(self.sui_system_state).map_err(|e| eyre!(e))?,
         ];
 
         ctx.command(Command::move_call(package, module, function, type_arguments, arguments));
