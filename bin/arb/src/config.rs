@@ -27,6 +27,6 @@ pub fn pegged_coin_types() -> HashSet<&'static str> {
 #[cfg(test)]
 pub mod tests {
 
-    pub const TEST_HTTP_URL: &str = "https://localhost:9000";
+    pub const TEST_HTTP_URL: &str = "http://localhost:9000";
     pub const TEST_ATTACKER: &str = "0xb72f3268a852ee5381d4ecd55f7988fd2284f16fa8ecd4fd45ac6ea5613e1e6e";
 }
