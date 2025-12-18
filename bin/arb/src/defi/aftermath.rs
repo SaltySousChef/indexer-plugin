@@ -444,7 +444,7 @@ mod tests {
                 .block_on(async { Box::new(DBSimulator::new_test(true).await) as Box<dyn Simulator> })
         }));
 
-        let owner = SuiAddress::from_str("suiprivkey1qpz727z3p2uf4nv86yme9xls96nkcl0yr7a939zpp66h9uj406hq6myd3l7").unwrap();
+        let owner = SuiAddress::from_str("0x3964a3c34ab6d4dccd2af3519ec74e56d9b46e90e70ad9e47e58d3274b1f4dba").unwrap();
         let recipient =
             SuiAddress::from_str("0x0cbe287984143ef232336bb39397bd10607fa274707e8d0f91016dceb31bb829").unwrap();
         let token_in_type = "0x2::sui::SUI";
@@ -485,7 +485,7 @@ mod tests {
                 .block_on(async { Box::new(DBSimulator::new_test(true).await) as Box<dyn Simulator> })
         }));
 
-        let owner = SuiAddress::from_str("suiprivkey1qpz727z3p2uf4nv86yme9xls96nkcl0yr7a939zpp66h9uj406hq6myd3l7").unwrap();
+        let owner = SuiAddress::from_str("0x3964a3c34ab6d4dccd2af3519ec74e56d9b46e90e70ad9e47e58d3274b1f4dba").unwrap();
         let recipient =
             SuiAddress::from_str("0x0cbe287984143ef232336bb39397bd10607fa274707e8d0f91016dceb31bb829").unwrap();
         // Swapping in the opposite direction: USDC -> SUI
