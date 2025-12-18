@@ -28,7 +28,7 @@ use crate::HttpConfig;
 
 #[derive(Clone, Debug, Parser)]
 pub struct Args {
-    #[clap(long, default_value = "./indexer_ids.txt")]
+    #[clap(long, default_value = "./indexer-ids.txt")]
     pub result_path: String,
 
     #[command(flatten)]

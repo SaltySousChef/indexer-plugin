@@ -157,7 +157,7 @@ impl Arb {
 
             let mut max_trial_res = TrialResult::default();
             while let Some(Ok(trial_res)) = joinset.join_next().await {
-                debug!(?trial_res, "Grid searching");
+                // debug!(?trial_res, "Grid searching");
                 if let Ok(trial_res) = trial_res {
                     if trial_res.cache_misses > cache_misses {
                         cache_misses = trial_res.cache_misses;

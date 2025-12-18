@@ -85,7 +85,7 @@ struct DbSimConfig {
     #[arg(
         long,
         env = "SUI_PRELOAD_PATH",
-        default_value = "/home/ubuntu/suiflow-relay/indexer_ids.txt"
+        default_value = "/home/ubuntu/suiflow-relay/indexer-ids.txt"
     )]
     pub preload_path: String,
 

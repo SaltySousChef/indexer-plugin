@@ -324,12 +324,12 @@ impl Dex for Aftermath {
 
     fn flip(&mut self) {
         std::mem::swap(&mut self.coin_in_type, &mut self.coin_out_type);
-        std::mem::swap(&mut self.index_in, &mut self.index_out);
-        std::mem::swap(&mut self.swap_fee_in, &mut self.swap_fee_out);
-        // Swap CoinIn and CoinOut type params (indices 1 and 2)
-        if self.type_params.len() >= 3 {
-            self.type_params.swap(1, 2);
-        }
+        // std::mem::swap(&mut self.index_in, &mut self.index_out);
+        // std::mem::swap(&mut self.swap_fee_in, &mut self.swap_fee_out);
+        // // Swap CoinIn and CoinOut type params (indices 1 and 2)
+        // if self.type_params.len() >= 3 {
+        //     self.type_params.swap(1, 2);
+        // }
     }
 
     fn is_a2b(&self) -> bool {
@@ -442,7 +442,7 @@ mod tests {
                 .block_on(async { Box::new(DBSimulator::new_test(true).await) as Box<dyn Simulator> })
         }));
 
-        let owner = SuiAddress::from_str(TEST_ATTACKER).unwrap();
+        let owner = SuiAddress::from_str("suiprivkey1qpz727z3p2uf4nv86yme9xls96nkcl0yr7a939zpp66h9uj406hq6myd3l7").unwrap();
         let recipient =
             SuiAddress::from_str("0x0cbe287984143ef232336bb39397bd10607fa274707e8d0f91016dceb31bb829").unwrap();
         let token_in_type = "0x2::sui::SUI";

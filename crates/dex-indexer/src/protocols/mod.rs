@@ -113,7 +113,7 @@ macro_rules! get_coin_in_out_v2 {
     }};
 }
 
-// For generating indexer_ids.txt only, using HttpClient is acceptable.
+// For generating indexer-ids.txt only, using HttpClient is acceptable.
 pub async fn get_children_ids(id: ObjectID) -> Result<Vec<String>> {
     let sui_client = SuiClientBuilder::default().build(&sui_rpc_node()).await.unwrap();
     let mut next_cursor = None;

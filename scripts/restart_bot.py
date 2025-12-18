@@ -32,7 +32,7 @@ def restart_bot():
             "ENABLE_RECORD_POOL_RELATED_ID=1 cargo run -r --bin arb start-bot "
             "--private-key {} "
             "--use-db-simulator --max-recent-arbs 5 --workers 10 --num-simulators 18 "
-            "--preload-path /home/ubuntu/sui/indexer_ids.txt "
+            "--preload-path /home/ubuntu/sui/indexer-ids.txt "
         )
 
         subprocess.run(
